@@ -66,11 +66,12 @@ function M.open_entry()
     :find()
 end
 
-function M.delet_entry()
-  local telescope = require("telescope")
+function M.delete_entry()
+  --local telescope = require("telescope")
   local finders = require("telescope.finders")
   local pickers = require("telescope.pickers")
   local actions = require("telescope.actions")
+  local actions_state = require("telescope.actions.state")
 
   local files = vim.fn.glob(config.options.journal_dir .. "/*" .. config.options.file_extension, true, 1)
 
@@ -91,7 +92,7 @@ function M.delet_entry()
       attach_mappings = function(prompt_bufnr, map)
         map("n", "<CR>", function()
           actions.select_default(prompt_bufnr)
-          local selection = telescope.get_selected_entry()
+          local selection = actions_state.get_selected_entry()
           if not selection or not selection.value then
             vim.notify("No file to delete", vim.log.levels.ERROR)
             return
@@ -100,15 +101,20 @@ function M.delet_entry()
 
           vim.ui.input({ prompt = "Are you sure you want to delete this entry? (y/n): " }, function(input)
             if input == "y" then
-              local command = "rm " .. filename
-              local output = vim.fn.system(command)
+              -- Use Lua's os.remove for safer file deletion
+              local success, err = os.remove(filename)
 
-              if vim.v.shell_error == 0 then
-                vim.cmd("bdelete!")
+              if success then
                 vim.notify("Journal entry deleted.", vim.log.levels.INFO)
+
+                -- Close the picker and refresh the list
+                actions.close(prompt_bufnr)
+                M.delete_entry() -- Reopen picker to refresh the list
               else
-                vim.notify("Failed to delete journal entry: " .. output, vim.log.levels.ERROR)
+                vim.notify("Failed to delete journal entry: " .. err, vim.log.levels.ERROR)
               end
+
+              -- Git integration (if enabled)
               if config.options.git_enable then
                 git.remove_file(filename)
                 vim.notify("Git integration not implemented.", vim.log.levels.WARN)

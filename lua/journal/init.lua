@@ -21,7 +21,7 @@ function M.open_entry()
 end
 
 function M.delete_entry()
-  core.delet_entry()
+  core.delete_entry()
 end
 
 function M.search_entries()

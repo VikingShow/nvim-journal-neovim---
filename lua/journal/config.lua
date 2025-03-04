@@ -14,5 +14,5 @@ function M.setup(opts)
   M.options = vim.tbl_deep_extend("force", M.options, opts or {})
   vim.fn.mkdir(M.options.journal_dir, "p")
 end
-
+--什么也没改
 return M
